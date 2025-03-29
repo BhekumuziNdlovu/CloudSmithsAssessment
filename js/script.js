@@ -14,7 +14,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const year = parseInt(idNumber.substring(0, 2), 10);
     const month = parseInt(idNumber.substring(2, 4), 10);
     const day = parseInt(idNumber.substring(4, 6), 10);
-    const dateOfBirth = new Date(`19${year}`, month - 1, day); // Assuming 1900s
+
+    // Validate month and day ranges before constructing the Date object
+    if (month < 1 || month > 12) {
+      return "Invalid month in ID number.";
+    }
+    if (day < 1 || day > 31) {
+      return "Invalid day in ID number.";
+    }
+
+    // Construct the date of birth (assuming 1900s)
+    const dateOfBirth = new Date(`19${year}`, month - 1, day);
 
     // Validate date of birth
     if (
