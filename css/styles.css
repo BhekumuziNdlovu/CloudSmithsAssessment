@@ -82,6 +82,12 @@ header h1 {
   cursor: not-allowed;
 }
 
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
 footer {
   margin-top: 20px;
   text-align: center;
