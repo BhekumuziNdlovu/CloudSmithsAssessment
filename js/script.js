@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to validate ID number
   function validateIDNumber(idNumber) {
-    // Check length
+    // Check length and numeric format
     if (idNumber.length !== 13 || !/^\d+$/.test(idNumber)) {
       return "ID number must be exactly 13 numeric digits.";
     }
@@ -15,23 +15,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const month = parseInt(idNumber.substring(2, 4), 10);
     const day = parseInt(idNumber.substring(4, 6), 10);
 
-    // Validate month and day ranges before constructing the Date object
-    if (month < 1 || month > 12) {
-      return "Invalid month in ID number.";
-    }
-    if (day < 1 || day > 31) {
-      return "Invalid day in ID number.";
+    // Validate month and day ranges
+    if (month < 1 || month > 12) return "Invalid month in ID number.";
+    if (day < 1 || day > 31) return "Invalid day in ID number.";
+
+    // Determine century (people born after 2000 have IDs starting with 00-21)
+    const currentYear = new Date().getFullYear();
+    const currentShortYear = currentYear % 100;
+    const fullYear = year <= currentShortYear ? 2000 + year : 1900 + year;
+
+    // Validate the actual date
+    const dateOfBirth = new Date(fullYear, month - 1, day);
+    
+    // Check if date is invalid
+    if (isNaN(dateOfBirth.getTime())) {
+      return "Invalid date of birth in ID number.";
     }
 
-    // Construct the date of birth (assuming 1900s)
-    const dateOfBirth = new Date(`19${year}`, month - 1, day);
-
-    // Validate date of birth
-    if (
-      dateOfBirth.getFullYear() !== 1900 + year ||
-      dateOfBirth.getMonth() + 1 !== month ||
-      dateOfBirth.getDate() !== day
-    ) {
+    // Additional validation to ensure date wasn't adjusted
+    if (dateOfBirth.getDate() !== day || 
+        dateOfBirth.getMonth() + 1 !== month || 
+        dateOfBirth.getFullYear() !== fullYear) {
       return "Invalid date of birth in ID number.";
     }
 
@@ -72,14 +76,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event listener for input changes
   idNumberInput.addEventListener("input", () => {
     const idNumber = idNumberInput.value.trim();
-    const error = validateIDNumber(idNumber);
-
-    if (error) {
-      errorMessage.textContent = error;
-      searchButton.disabled = true;
+    
+    // Only validate if we have 13 characters (don't show errors while typing)
+    if (idNumber.length === 13) {
+      const error = validateIDNumber(idNumber);
+      
+      if (error) {
+        errorMessage.textContent = error;
+        errorMessage.style.color = "red";
+        searchButton.disabled = true;
+      } else {
+        errorMessage.textContent = "Valid ID number";
+        errorMessage.style.color = "green";
+        searchButton.disabled = false;
+      }
     } else {
       errorMessage.textContent = "";
-      searchButton.disabled = false;
+      searchButton.disabled = true;
     }
   });
 });
