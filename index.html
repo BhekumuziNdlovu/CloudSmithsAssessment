@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CloudSmiths Assessment</title>
-  <!-- Link to CSS -->
+  
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -21,7 +21,13 @@
       <label for="id-number">Enter Your South African ID Number:</label>
       <input type="text" id="id-number" placeholder="e.g., 8001015009087" maxlength="13">
       <button id="search-button" disabled>Search</button>
-      <p id="error-message" class="error-message"></p> <!-- Error message container -->
+      <p id="error-message" class="error-message"></p> 
+    </section>
+
+    
+    <section id="holidays-section" class="holidays-section">
+      <h2>Public Holidays Matching Your Birth Date</h2>
+      <div id="holiday-list"></div>
     </section>
 
     <footer>
@@ -29,7 +35,6 @@
     </footer>
   </div>
 
-  <!-- Link to JavaScript -->
   <script src="js/script.js"></script>
 </body>
 </html>
