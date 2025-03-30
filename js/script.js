@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const callbackUrl = "https://bhekumuzindlovu.github.io/CloudSmithsAssessment/"; // Your callback URL
   const salesforceInstanceUrl = "https://orgfarm-865b3e1da5-dev-ed.develop.my.salesforce.com"; // Your Salesforce instance URL
 
-  let accessToken = null; // To store the Salesforce access token
+  let accessToken = localStorage.getItem("salesforceAccessToken"); // Retrieve access token from storage
 
   // Function to validate ID number
   function validateIDNumber(idNumber) {
@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.access_token) {
         accessToken = data.access_token;
+        localStorage.setItem("salesforceAccessToken", accessToken); // Store access token in localStorage
         console.log("Access Token:", accessToken);
         alert("Authentication successful!");
       } else {
@@ -248,8 +249,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (authCode) {
     // Process the authorization code to get an access token
     authenticateWithSalesforce(authCode);
-  } else {
-    // Redirect to Salesforce for authentication if no authorization code is present
+  } else if (!accessToken) {
+    // Redirect to Salesforce for authentication if no access token is present
     redirectToSalesforceAuth();
   }
 });
