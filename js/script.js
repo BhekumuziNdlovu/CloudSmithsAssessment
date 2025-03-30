@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Hardcoded Salesforce credentials (replace with environment variables in production)
   const consumerKey = "3MVG9dAEux2v1sLsqWAfLpFp3SJyFNz4y7qVsg7IaLJloJwF51QQsy_x51ZHGudNl42qTlHdxWcbnuYpBxpRK";
   const consumerSecret = "9DF9117D3D2D995F7E83C8CE375B4C6ADB903BECEABE8A67A0F9B435419474F0";
-  const callbackUrl = "https://bhekumuzindlovu.github.io/CloudSmithsAssessment/"; // Your callback URL
+  const username = "muzinkosi70468@agentforce.com";
+  const password = "NOmxolisi08#"; // Ensure this includes the security token if required
   const salesforceInstanceUrl = "https://orgfarm-865b3e1da5-dev-ed.develop.my.salesforce.com"; // Your Salesforce instance URL
 
   let accessToken = localStorage.getItem("salesforceAccessToken"); // Retrieve access token from storage
@@ -81,18 +82,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return sum % 10 === 0;
   }
 
-  // Function to authenticate with Salesforce and get an access token
-  async function authenticateWithSalesforce(authCode) {
+  // Function to authenticate with Salesforce programmatically
+  async function authenticateWithSalesforce() {
     try {
       const response = await fetch("https://login.salesforce.com/services/oauth2/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
-          grant_type: "authorization_code",
+          grant_type: "password",
           client_id: consumerKey,
           client_secret: consumerSecret,
-          redirect_uri: callbackUrl,
-          code: authCode,
+          username: username,
+          password: password,
         }),
       });
 
@@ -100,12 +101,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.access_token) {
         accessToken = data.access_token;
-        localStorage.setItem("salesforceAccessToken", accessToken); // Store access token in localStorage
+        localStorage.setItem("salesforceAccessToken", accessToken); // Store access token securely
         console.log("Access Token:", accessToken);
         alert("Authentication successful!");
       } else {
         console.error("Error during authentication:", data);
-        alert("Authentication failed. Please try again.");
+        alert("Authentication failed. Please check the console for details.");
       }
     } catch (error) {
       console.error("Error authenticating with Salesforce:", error);
@@ -116,8 +117,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to save ID number details to Salesforce
   async function saveIDNumberDetails(idNumber, dateOfBirth, gender, citizenshipStatus) {
     if (!accessToken) {
-      alert("Not authenticated with Salesforce. Please log in first.");
-      return;
+      alert("Not authenticated with Salesforce. Authenticating now...");
+      await authenticateWithSalesforce(); // Authenticate if no access token is present
     }
 
     const record = {
@@ -174,10 +175,52 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       alert("ID Number details saved successfully!");
+
+      // Fetch public holidays after saving ID number details
+      const year = parseInt(idNumber.substring(0, 2), 10);
+      const currentYear = new Date().getFullYear();
+      const currentShortYear = currentYear % 100;
+      const fullYear = year <= currentShortYear ? 2000 + year : 1900 + year;
+      await fetchPublicHolidays(fullYear);
     } catch (error) {
       console.error("Error saving ID number details:", error);
       alert("Failed to save ID details to Salesforce.");
     }
+  }
+
+  // Function to fetch public holidays using Calendarific API
+  async function fetchPublicHolidays(year) {
+    const apiKey = "24c5e86734eb44dc4a962826324a5546e74dc42f";
+    const countryCode = "ZA";
+
+    try {
+      const response = await fetch(
+        `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=${countryCode}&year=${year}`
+      );
+
+      const data = await response.json();
+      const holidays = data.response.holidays;
+
+      console.log("Public Holidays:", holidays);
+
+      // Display holidays on the webpage
+      displayHolidays(holidays);
+    } catch (error) {
+      console.error("Error fetching public holidays:", error);
+      alert("Failed to fetch public holidays.");
+    }
+  }
+
+  // Function to display holidays on the webpage
+  function displayHolidays(holidays) {
+    const holidaysSection = document.getElementById("holidays-section");
+    holidaysSection.innerHTML = "";
+
+    holidays.forEach((holiday) => {
+      const holidayItem = document.createElement("div");
+      holidayItem.textContent = `${holiday.name} (${holiday.date.iso})`;
+      holidaysSection.appendChild(holidayItem);
+    });
   }
 
   // Event listener for input changes
@@ -236,21 +279,8 @@ document.addEventListener("DOMContentLoaded", () => {
     await saveIDNumberDetails(idNumber, dateOfBirth, gender, citizenshipStatus);
   });
 
-  // Redirect user to Salesforce for authentication
-  function redirectToSalesforceAuth() {
-    const authUrl = `https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=${consumerKey}&redirect_uri=${callbackUrl}&scope=api refresh_token`;
-    window.location.href = authUrl;
-  }
-
-  // Handle the callback URL and process the authorization code
-  const urlParams = new URLSearchParams(window.location.search);
-  const authCode = urlParams.get("code");
-
-  if (authCode) {
-    // Process the authorization code to get an access token
-    authenticateWithSalesforce(authCode);
-  } else if (!accessToken) {
-    // Redirect to Salesforce for authentication if no access token is present
-    redirectToSalesforceAuth();
+  // Authenticate with Salesforce on page load if no access token is stored
+  if (!accessToken) {
+    authenticateWithSalesforce();
   }
 });
