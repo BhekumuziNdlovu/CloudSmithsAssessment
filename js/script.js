@@ -241,6 +241,15 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = authUrl;
   }
 
-  // Add a login button or trigger authentication when needed
-  redirectToSalesforceAuth(); // Uncomment this line to automatically redirect to Salesforce for authentication
+  // Handle the callback URL and process the authorization code
+  const urlParams = new URLSearchParams(window.location.search);
+  const authCode = urlParams.get("code");
+
+  if (authCode) {
+    // Process the authorization code to get an access token
+    authenticateWithSalesforce(authCode);
+  } else {
+    // Redirect to Salesforce for authentication if no authorization code is present
+    redirectToSalesforceAuth();
+  }
 });
