@@ -85,9 +85,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to authenticate with Salesforce programmatically
   async function authenticateWithSalesforce() {
     try {
-      const response = await fetch("https://login.salesforce.com/services/oauth2/token", {
+      // Use a proxy server to handle CORS issues
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      const targetUrl = "https://login.salesforce.com/services/oauth2/token";
+      
+      const response = await fetch(proxyUrl + targetUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: { 
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json"
+        },
         body: new URLSearchParams({
           grant_type: "password",
           client_id: consumerKey,
@@ -119,6 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!accessToken) {
       alert("Not authenticated with Salesforce. Authenticating now...");
       await authenticateWithSalesforce(); // Authenticate if no access token is present
+      if (!accessToken) return; // If authentication still failed, exit
     }
 
     const record = {
@@ -130,12 +138,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
+      // Use a proxy server to handle CORS issues
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      
       // Check if the record already exists
+      const queryUrl = `${salesforceInstanceUrl}/services/data/v57.0/query/?q=SELECT+Id,Search_Count__c+FROM+Identification_Number__c+WHERE+Name='${idNumber}'`;
+      
       const queryResponse = await fetch(
-        `${salesforceInstanceUrl}/services/data/v57.0/query/?q=SELECT Id, Search_Count__c FROM Identification_Number__c WHERE Name='${idNumber}'`,
+        proxyUrl + queryUrl,
         {
           method: "GET",
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { 
+            Authorization: `Bearer ${accessToken}`,
+            "Accept": "application/json"
+          },
         }
       );
 
@@ -147,12 +163,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentCount = queryData.records[0].Search_Count__c || 0;
 
         await fetch(
-          `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c/${recordId}`,
+          proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c/${recordId}`,
           {
             method: "PATCH",
             headers: {
               Authorization: `Bearer ${accessToken}`,
               "Content-Type": "application/json",
+              "Accept": "application/json"
             },
             body: JSON.stringify({ Search_Count__c: currentCount + 1 }),
           }
@@ -162,12 +179,13 @@ document.addEventListener("DOMContentLoaded", () => {
         record.Search_Count__c = 1;
 
         await fetch(
-          `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c`,
+          proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c`,
           {
             method: "POST",
             headers: {
               Authorization: `Bearer ${accessToken}`,
               "Content-Type": "application/json",
+              "Accept": "application/json"
             },
             body: JSON.stringify(record),
           }
@@ -194,9 +212,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const countryCode = "ZA";
 
     try {
-      const response = await fetch(
-        `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=${countryCode}&year=${year}`
-      );
+      // Use a proxy server to handle CORS issues
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      const targetUrl = `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=${countryCode}&year=${year}`;
+      
+      const response = await fetch(proxyUrl + targetUrl, {
+        headers: {
+          "Accept": "application/json"
+        }
+      });
 
       const data = await response.json();
       const holidays = data.response.holidays;
