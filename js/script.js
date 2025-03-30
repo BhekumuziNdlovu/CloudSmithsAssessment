@@ -2,13 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const idNumberInput = document.getElementById("id-number");
   const searchButton = document.getElementById("search-button");
   const errorMessage = document.getElementById("error-message");
-  const holidayList = document.getElementById("holiday-list");
 
   // Hardcoded Salesforce credentials
   const consumerKey = "3MVG9dAEux2v1sLsqWAfLpFp3SJyFNz4y7qVsg7IaLJloJwF51QQsy_x51ZHGudNl42qTlHdxWcbnuYpBxpRK";
   const consumerSecret = "9DF9117D3D2D995F7E83C8CE375B4C6ADB903BECEABE8A67A0F9B435419474F0";
   const username = "muzinkosi70468@agentforce.com";
-  const password = "NOmxolisi08#"; // Should include security token if required
+  const password = "NOmxolisi08#"; // Include the security token if required
   const salesforceInstanceUrl = "https://orgfarm-865b3e1da5-dev-ed.develop.my.salesforce.com";
 
   let accessToken = localStorage.getItem("salesforceAccessToken");
@@ -83,12 +82,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return sum % 10 === 0;
   }
 
-  // Function to authenticate with Salesforce
+  // Authenticate with Salesforce using CORS proxy
   async function authenticateWithSalesforce() {
     try {
-      const response = await fetch("https://login.salesforce.com/services/oauth2/token", {
+      const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+      const targetUrl = "https://login.salesforce.com/services/oauth2/token";
+
+      const response = await fetch(proxyUrl + targetUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: { 
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest"
+        },
         body: new URLSearchParams({
           grant_type: "password",
           client_id: consumerKey,
@@ -119,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to save ID number details to Salesforce
+  // Save ID number details to Salesforce using CORS proxy
   async function saveIDNumberDetails(idNumber, dateOfBirth, gender, citizenshipStatus) {
     if (!accessToken && !(await authenticateWithSalesforce())) {
       errorMessage.textContent = "Authentication failed. Cannot save data.";
@@ -136,11 +141,17 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
+      const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+
+      // Check if the record already exists
       const queryResponse = await fetch(
-        `${salesforceInstanceUrl}/services/data/v57.0/query/?q=SELECT+Id,Search_Count__c+FROM+Identification_Number__c+WHERE+Name='${idNumber}'`,
+        proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/query/?q=SELECT Id, Search_Count__c FROM Identification_Number__c WHERE Name='${idNumber}'`,
         {
           method: "GET",
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { 
+            Authorization: `Bearer ${accessToken}`,
+            "X-Requested-With": "XMLHttpRequest"
+          },
         }
       );
 
@@ -152,12 +163,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentCount = queryData.records[0].Search_Count__c || 0;
 
         await fetch(
-          `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c/${recordId}`,
+          proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c/${recordId}`,
           {
             method: "PATCH",
             headers: {
               Authorization: `Bearer ${accessToken}`,
               "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
             },
             body: JSON.stringify({ Search_Count__c: currentCount + 1 }),
           }
@@ -165,12 +177,13 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         // Create new record
         await fetch(
-          `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c`,
+          proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c`,
           {
             method: "POST",
             headers: {
               Authorization: `Bearer ${accessToken}`,
               "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
             },
             body: JSON.stringify(record),
           }
@@ -180,10 +193,9 @@ document.addEventListener("DOMContentLoaded", () => {
       errorMessage.textContent = "ID details saved successfully!";
       errorMessage.style.color = "green";
 
-      // Fetch public holidays for the date and month
-      const month = dateOfBirth.getMonth() + 1;
-      const day = dateOfBirth.getDate();
-      await fetchPublicHolidays(month, day);
+      // Fetch public holidays for the extracted year
+      const year = dateOfBirth.getFullYear();
+      await fetchPublicHolidays(year);
     } catch (error) {
       console.error("Error saving ID details:", error);
       errorMessage.textContent = "Failed to save ID details. Please try again.";
@@ -191,24 +203,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to fetch public holidays using Calendarific API
-  async function fetchPublicHolidays(month, day) {
+  // Fetch public holidays using Calendarific API via CORS proxy
+  async function fetchPublicHolidays(year) {
     const apiKey = "24c5e86734eb44dc4a962826324a5546e74dc42f";
     const countryCode = "ZA";
 
     try {
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-      const targetUrl = `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=${countryCode}&year=2023&month=${month}&day=${day}`;
+      const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+      const targetUrl = `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=${countryCode}&year=${year}`;
+
       const response = await fetch(proxyUrl + targetUrl, {
-        headers: { "Accept": "application/json" },
+        headers: { 
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
       });
 
       const data = await response.json();
 
       if (data.response && data.response.holidays) {
-        const holidays = data.response.holidays;
-        console.log("Public Holidays:", holidays);
-        displayHolidays(holidays);
+        displayHolidays(data.response.holidays);
       } else {
         throw new Error("Invalid holiday data received");
       }
@@ -219,20 +233,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to display holidays on the webpage
+  // Display holidays on the webpage
   function displayHolidays(holidays) {
-    holidayList.innerHTML = "";
+    const holidaysSection = document.getElementById("holidays-section");
+    holidaysSection.innerHTML = "<h3>Public Holidays in Your Birth Year:</h3>";
 
     if (holidays.length === 0) {
-      holidayList.innerHTML = "<p>No public holidays found for this date.</p>";
+      holidaysSection.innerHTML += "<p>No public holidays found for this year.</p>";
       return;
     }
 
+    const holidayList = document.createElement("ul");
     holidays.forEach((holiday) => {
-      const holidayItem = document.createElement("div");
+      const holidayItem = document.createElement("li");
       holidayItem.textContent = `${holiday.name} (${holiday.date.iso})`;
       holidayList.appendChild(holidayItem);
     });
+
+    holidaysSection.appendChild(holidayList);
   }
 
   // Event listener for input changes
