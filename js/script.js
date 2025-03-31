@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const idNumberInput = document.getElementById("id-number");
   const searchButton = document.getElementById("search-button");
   const errorMessage = document.getElementById("error-message");
-  const successMessage = document.getElementById("success-message"); // New element for success messages
 
   // Hardcoded Salesforce credentials
   const consumerKey = "3MVG9dAEux2v1sLsqWAfLpFp3SJyFNz4y7qVsg7IaLJloJwF51QQsy_x51ZHGudNl42qTlHdxWcbnuYpBxpRK";
@@ -36,6 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Validate the actual date
     const dateOfBirth = new Date(fullYear, month - 1, day);
+
+    // Check if date is invalid
     if (isNaN(dateOfBirth.getTime())) {
       return "Invalid date of birth in ID number.";
     }
@@ -184,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         );
       }
-
+      
       successMessage.textContent = "ID details saved successfully!";
       successMessage.style.color = "green";
 
@@ -212,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await response.json();
+
       if (data.response && data.response.holidays) {
         displayHolidays(data.response.holidays);
       } else {
@@ -256,14 +258,12 @@ document.addEventListener("DOMContentLoaded", () => {
         errorMessage.style.color = "red";
         searchButton.disabled = true;
       } else {
-        errorMessage.textContent = "";
-        successMessage.textContent = "Valid ID number";
-        successMessage.style.color = "green";
+        errorMessage.textContent = "Valid ID number";
+        errorMessage.style.color = "green";
         searchButton.disabled = false;
       }
     } else {
       errorMessage.textContent = "";
-      successMessage.textContent = "";
       searchButton.disabled = true;
     }
   });
