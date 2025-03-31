@@ -187,10 +187,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         );
       }
-      
+      console.log( JSON.stringify(record));
       successMessage.textContent = "ID details saved successfully!";
       successMessage.style.color = "green";
-      console.log( JSON.stringify(record));
+      
 
       // Fetch public holidays for the extracted year
       const year = dateOfBirth.getFullYear();
