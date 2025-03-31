@@ -131,9 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Prepare the record according to your custom object fields
+    const dateOnly = dateOfBirth.toISOString().split('T')[0];
     const record = {
       Name: idNumber, // Identification_Number__c.Name field
-      Date_Of_Birth__c: dateOfBirth.toISOString().split('T')[0],
+      Date_Of_Birth__c: dateOnly,
       Gender__c: gender,
       Citizenship_Status__c: citizenshipStatus,
       Search_Count__c: 1
