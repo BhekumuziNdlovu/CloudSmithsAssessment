@@ -35,6 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Validate the actual date
     const dateOfBirth = new Date(fullYear, month - 1, day);
+
+    // Check if date is invalid
     if (isNaN(dateOfBirth.getTime())) {
       return "Invalid date of birth in ID number.";
     }
@@ -150,6 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       const queryData = await queryResponse.json();
+
       if (queryData.totalSize > 0) {
         // Update existing record
         const recordId = queryData.records[0].Id;
@@ -210,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await response.json();
+
       if (data.response && data.response.holidays) {
         displayHolidays(data.response.holidays);
       } else {
@@ -245,8 +249,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event listener for input changes
   idNumberInput.addEventListener("input", () => {
     const idNumber = idNumberInput.value.trim();
+
     if (idNumber.length === 13) {
       const error = validateIDNumber(idNumber);
+
       if (error) {
         errorMessage.textContent = error;
         errorMessage.style.color = "red";
@@ -265,6 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event listener for search button click
   searchButton.addEventListener("click", async () => {
     const idNumber = idNumberInput.value.trim();
+
     const error = validateIDNumber(idNumber);
     if (error) {
       errorMessage.textContent = error;
@@ -280,8 +287,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentShortYear = currentYear % 100;
     const fullYear = year <= currentShortYear ? 2000 + year : 1900 + year;
     const dateOfBirth = new Date(fullYear, month - 1, day);
+
     const genderDigit = parseInt(idNumber[6], 10);
     const gender = genderDigit < 5 ? "Female" : "Male";
+
     const citizenshipDigit = parseInt(idNumber[10], 10);
     const citizenshipStatus = citizenshipDigit === 0 ? "SA Citizen" : "Permanent Resident";
 
