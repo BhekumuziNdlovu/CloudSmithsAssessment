@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const salesforceInstanceUrl = "https://orgfarm-865b3e1da5-dev-ed.develop.my.salesforce.com";
 
   let accessToken = localStorage.getItem("salesforceAccessToken");
+  console.log(accessToken);
 
   // Function to validate ID number
   function validateIDNumber(idNumber) {
