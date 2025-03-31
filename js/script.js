@@ -103,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await response.json();
-      console.log(data);
 
       if (data.access_token) {
         accessToken = data.access_token;
@@ -300,7 +299,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const citizenshipStatus = citizenshipDigit === 0 ? "SA Citizen" : "Permanent Resident";
 
     // Save details to Salesforce
-    await saveIDNumberDetails(idNumber, dateOfBirth, gender, citizenshipStatus);
+   // await saveIDNumberDetails(idNumber, dateOfBirth, gender, citizenshipStatus);
+    try {
+      await saveIDNumberDetails(idNumber, dateOfBirth, gender, citizenshipStatus);
+      console.log("Data saved successfully");
+  } catch (error) {
+      console.error("Error saving data:", error);
+  }
   });
 
   // Initial authentication
