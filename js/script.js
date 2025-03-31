@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const consumerKey = "3MVG9dAEux2v1sLsqWAfLpFp3SJyFNz4y7qVsg7IaLJloJwF51QQsy_x51ZHGudNl42qTlHdxWcbnuYpBxpRK";
   const consumerSecret = "9DF9117D3D2D995F7E83C8CE375B4C6ADB903BECEABE8A67A0F9B435419474F0";
   const username = "muzinkosi70468@agentforce.com";
-  const password = const password = "NOmxolisi08#gH6ssKV21Z9tlMweYMOic4j0"; // Include security token if required
+  const password = "NOmxolisi08#gH6ssKV21Z9tlMweYMOic4j0"; // Include security token if required
   const salesforceInstanceUrl = "https://orgfarm-865b3e1da5-dev-ed.develop.my.salesforce.com";
 
   let accessToken = localStorage.getItem("salesforceAccessToken");
