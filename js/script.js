@@ -83,8 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Salesforce authentication function
   async function authenticateWithSalesforce() {
     try {
-      // First try without proxy
-      let response = await fetch("https://login.salesforce.com/services/oauth2/token", {
+      const response = await fetch("https://login.salesforce.com/services/oauth2/token", {
         method: "POST",
         headers: { 
           "Content-Type": "application/x-www-form-urlencoded",
@@ -99,27 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }),
       });
 
-      // If CORS fails, try with proxy
-      if (!response.ok) {
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        response = await fetch(proxyUrl + "https://login.salesforce.com/services/oauth2/token", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-            "X-Requested-With": "XMLHttpRequest"
-          },
-          body: new URLSearchParams({
-            grant_type: "password",
-            client_id: consumerKey,
-            client_secret: consumerSecret,
-            username: username,
-            password: password,
-          }),
-        });
-      }
-
       const data = await response.json();
+
       if (data.access_token) {
         accessToken = data.access_token;
         localStorage.setItem("salesforceAccessToken", accessToken);
@@ -157,8 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      // First try direct request
-      let response = await fetch(
+      // Check if the record already exists
+      const queryResponse = await fetch(
         `${salesforceInstanceUrl}/services/data/v57.0/query/?q=SELECT+Id,Search_Count__c+FROM+Identification_Number__c+WHERE+Name='${idNumber}'`,
         {
           method: "GET",
@@ -169,29 +149,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       );
 
-      // If CORS fails, try with proxy
-      if (!response.ok) {
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        response = await fetch(
-          proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/query/?q=SELECT+Id,Search_Count__c+FROM+Identification_Number__c+WHERE+Name='${idNumber}'`,
-          {
-            method: "GET",
-            headers: { 
-              Authorization: `Bearer ${accessToken}`,
-              "Accept": "application/json",
-              "X-Requested-With": "XMLHttpRequest"
-            }
-          }
-        );
-      }
-
-      const queryData = await response.json();
+      const queryData = await queryResponse.json();
       if (queryData.totalSize > 0) {
         // Update existing record
         const recordId = queryData.records[0].Id;
         const currentCount = queryData.records[0].Search_Count__c || 0;
 
-        let updateResponse = await fetch(
+        await fetch(
           `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c/${recordId}`,
           {
             method: "PATCH",
@@ -203,30 +167,9 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({ Search_Count__c: currentCount + 1 })
           }
         );
-
-        if (!updateResponse.ok) {
-          const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-          updateResponse = await fetch(
-            proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c/${recordId}`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
-              },
-              body: JSON.stringify({ Search_Count__c: currentCount + 1 })
-            }
-          );
-        }
-
-        if (!updateResponse.ok) {
-          throw new Error("Failed to update record");
-        }
       } else {
         // Create new record
-        let createResponse = await fetch(
+        await fetch(
           `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c`,
           {
             method: "POST",
@@ -238,27 +181,6 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify(record)
           }
         );
-
-        if (!createResponse.ok) {
-          const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-          createResponse = await fetch(
-            proxyUrl + `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
-              },
-              body: JSON.stringify(record)
-            }
-          );
-        }
-
-        if (!createResponse.ok) {
-          throw new Error("Failed to create record");
-        }
       }
 
       errorMessage.textContent = "ID details saved successfully!";
@@ -280,10 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const countryCode = "ZA";
 
     try {
-      // Use a proxy server to handle CORS issues
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
       const targetUrl = `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=${countryCode}&year=${year}`;
-      const response = await fetch(proxyUrl + targetUrl, {
+      const response = await fetch(targetUrl, {
         headers: { 
           "Accept": "application/json"
         }
@@ -325,7 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event listener for input changes
   idNumberInput.addEventListener("input", () => {
     const idNumber = idNumberInput.value.trim();
-
     if (idNumber.length === 13) {
       const error = validateIDNumber(idNumber);
       if (error) {
@@ -346,8 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event listener for search button click
   searchButton.addEventListener("click", async () => {
     const idNumber = idNumberInput.value.trim();
-
-    // Validate the ID number again before saving
     const error = validateIDNumber(idNumber);
     if (error) {
       errorMessage.textContent = error;
