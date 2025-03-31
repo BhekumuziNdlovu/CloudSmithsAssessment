@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const idNumberInput = document.getElementById("id-number");
   const searchButton = document.getElementById("search-button");
   const errorMessage = document.getElementById("error-message");
+  const successMessage = document.getElementById("success-message");
 
   // Hardcoded Salesforce credentials
   const consumerKey = "3MVG9dAEux2v1sLsqWAfLpFp3SJyFNz4y7qVsg7IaLJloJwF51QQsy_x51ZHGudNl42qTlHdxWcbnuYpBxpRK";
@@ -258,8 +259,8 @@ document.addEventListener("DOMContentLoaded", () => {
         errorMessage.style.color = "red";
         searchButton.disabled = true;
       } else {
-        errorMessage.textContent = "Valid ID number";
-        errorMessage.style.color = "green";
+        successMessage.textContent = "Valid ID number";
+        successMessage.style.color = "green";
         searchButton.disabled = false;
       }
     } else {
