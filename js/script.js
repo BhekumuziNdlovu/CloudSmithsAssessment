@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const errorMessage = document.getElementById("error-message");
   const successMessage = document.getElementById("success-message");
 
-  // Hardcoded Salesforce credentials
+  //These are the salesforce credentials
   const consumerKey = "3MVG9dAEux2v1sLsqWAfLpFp3SJyFNz4y7qVsg7IaLJloJwF51QQsy_x51ZHGudNl42qTlHdxWcbnuYpBxpRK";
   const consumerSecret = "9DF9117D3D2D995F7E83C8CE375B4C6ADB903BECEABE8A67A0F9B435419474F0";
   const username = "muzinkosi70468@agentforce.com";
@@ -14,23 +14,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let accessToken = localStorage.getItem("salesforceAccessToken");
   console.log(accessToken);
 
-  // Function to validate ID number
+  // Function to check the ID number
   function validateIDNumber(idNumber) {
-    // Check length and numeric format
+    // Check length and the value format
     if (idNumber.length !== 13 || !/^\d+$/.test(idNumber)) {
       return "ID number must be exactly 13 numeric digits.";
     }
 
-    // Extract date of birth (YYMMDD)
+    // Get the date of birth (YYMMDD)
     const year = parseInt(idNumber.substring(0, 2), 10);
     const month = parseInt(idNumber.substring(2, 4), 10);
     const day = parseInt(idNumber.substring(4, 6), 10);
 
-    // Validate month and day ranges
+    // Check month and day ranges
     if (month < 1 || month > 12) return "Invalid month in ID number.";
     if (day < 1 || day > 31) return "Invalid day in ID number.";
 
-    // Determine century (people born after 2000 have IDs starting with 00-21)
+    // Look at the century
     const currentYear = new Date().getFullYear();
     const currentShortYear = currentYear % 100;
     const fullYear = year <= currentShortYear ? 2000 + year : 1900 + year;
@@ -43,20 +43,20 @@ document.addEventListener("DOMContentLoaded", () => {
       return "Invalid date of birth in ID number.";
     }
 
-    // Additional validation to ensure date wasn't adjusted
+    // Additional validation to ensure date wasn't changed
     if (dateOfBirth.getDate() !== day || 
         dateOfBirth.getMonth() + 1 !== month || 
         dateOfBirth.getFullYear() !== fullYear) {
       return "Invalid date of birth in ID number.";
     }
 
-    // Validate gender (7th digit)
+    // Piece to validate gender
     const genderDigit = parseInt(idNumber[6], 10);
     if (genderDigit < 0 || genderDigit > 9) {
       return "Invalid gender indicator in ID number.";
     }
 
-    // Validate citizenship status (11th digit)
+    // Piece to validate citizenship status
     const citizenshipDigit = parseInt(idNumber[10], 10);
     if (![0, 1].includes(citizenshipDigit)) {
       return "Invalid citizenship status in ID number.";
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return "Invalid checksum in ID number.";
     }
 
-    return null; // No errors
+    return null;
   }
 
   // Luhn algorithm for checksum validation
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return sum % 10 === 0;
   }
 
-  // Salesforce authentication function
+  // Part to authenticate with Salesforce
   async function authenticateWithSalesforce() {
     try {
       const response = await fetch("https://login.salesforce.com/services/oauth2/token", {
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to save ID number details to Salesforce
+  // Function to save ID number to Salesforce
   async function saveIDNumberDetails(idNumber, dateOfBirth, gender, citizenshipStatus) {
     if (!accessToken && !(await authenticateWithSalesforce())) {
       errorMessage.textContent = "Authentication failed. Cannot save data.";
@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Prepare the record according to your custom object fields
+    // Prepare the necessary fields to POST to salesforce
     const dateOnly = dateOfBirth.toISOString().split('T')[0];
     const record = {
       Name: idNumber, // Identification_Number__c.Name field
@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const queryData = await queryResponse.json();
 
       if (queryData.totalSize > 0) {
-        // Update existing record
+        // Update the record which already exists in Salesforce
         const recordId = queryData.records[0].Id;
         const currentCount = queryData.records[0].Search_Count__c || 0;
 
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         );
       } else {
-        // Create new record
+        // Create a new record in Salesforce
         await fetch(
           `${salesforceInstanceUrl}/services/data/v57.0/sobjects/Identification_Number__c`,
           {
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       successMessage.style.color = "green";
       
 
-      // Fetch public holidays for the extracted year
+      // Get public holidays for the year
       const year = dateOfBirth.getFullYear();
       await fetchPublicHolidays(year);
     } catch (error) {
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to fetch public holidays using Calendarific API
+  // Function to Get the public holidays for the year using Calendarific API
   async function fetchPublicHolidays(year) {
     const apiKey = "24c5e86734eb44dc4a962826324a5546e74dc42f";
     const countryCode = "ZA";
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to display holidays on the webpage
+  // Function to show holidays on the webpage
   function displayHolidays(holidays) {
     const holidaysSection = document.getElementById("holidays-section");
     holidaysSection.innerHTML = "<h3>Public Holidays in Your Birth Year:</h3>";
